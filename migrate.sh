@@ -1,4 +1,14 @@
 #!/bin/bash
+
+version=$(lsb_release -rs)
+
+echo "Версия Ubuntu Server: $version"
+if [ "$version" = "22" ]; then
+    echo "Версия 22. Скрипт завершается."
+    exit 1
+fi
+echo "Продолжаем выполнение скрипта..."
+
 touch /home/awgmode.txt
 echo "server" > /home/awgmode.txt
 sed -i 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources
