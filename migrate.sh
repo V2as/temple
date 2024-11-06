@@ -57,8 +57,8 @@ docker cp amnezia-awg:/opt/amnezia/awg/wg0.conf /opt/amnezia/awg
 #iptables -t nat -A POSTROUTING -s $MASK -o ens3 -j MASQUERADE; iptables -A INPUT -p udp -m udp --dport $PORT -j ACCEPT; iptables -A FORWARD -i wg0 -j ACCEPT; iptables -A FORWARD -o wg0 -j ACCEPT;
 #iptables -t nat -D POSTROUTING -s $MASK -o ens3 -j MASQUERADE; iptables -D INPUT -p udp -m udp --dport $PORT -j ACCEPT; iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT;
 
-docker stop $(docker ps -q)
-docker rm $(docker ps -a -q)
+docker stop amnezia-awg
+
 
 #wg-quick up /opt/amnezia/awg/wg0.conf
 
