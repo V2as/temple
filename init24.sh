@@ -30,7 +30,8 @@ apt-get install amneziawg -y
 mkdir -p /opt/amnezia/awg
 
 # генерация конфигурации
-umask 077 && wg genkey | tee /opt/amnezia/awg/wireguard_server_private_key.key | wg pubkey > /opt/amnezia/awg/wireguard_server_public_key.key && umask 077 && wg genpsk > /opt/amnezia/awg/wireguard_psk.key
+CONFIG_FILE="/opt/amnezia/awg/wg0.conf"
+umask 077 && awg genkey | tee /opt/amnezia/awg/wireguard_server_private_key.key | awg pubkey > /opt/amnezia/awg/wireguard_server_public_key.key && umask 077 && awg genpsk > /opt/amnezia/awg/wireguard_psk.key
 PrivateKey=$(cat /opt/amnezia/awg/wireguard_server_private_key.key)
 PSK=$(cat /opt/amnezia/awg/wireguard_psk.key)
 client_private_key=$(awg genkey)
@@ -58,7 +59,7 @@ H4 = ${H4}
 [Peer]
 PublicKey = $client_public_key
 PresharedKey = $PSK
-AllowedIPs = 10.8.1.2/32"
+AllowedIPs = 10.8.1.2/32" > $CONFIG_FILE
 
 # создание службы
 interfaces=$(ip -o link show | awk -F': ' '{print $2}')
@@ -79,7 +80,7 @@ fi
 
 MASK=$(grep -oP 'Address\s*=\s*\K[^\s]+' $CONFIG_FILE)
 PORT=$(grep -oP 'ListenPort\s*=\s*\K\d+' $CONFIG_FILE)
-CONFIG_FILE="/opt/amnezia/awg/wg0.conf"
+
 SERVICE_FILE="/etc/systemd/system/black.service"
 
 echo "[Unit]
