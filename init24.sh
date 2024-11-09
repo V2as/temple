@@ -40,12 +40,14 @@ H1=$(shuf -i5-2147483647 -n1)
 H2=$(shuf -i5-2147483647 -n1)
 H3=$(shuf -i5-2147483647 -n1)
 H4=$(shuf -i5-2147483647 -n1)
+port_number=$((RANDOM % 60000 + 40000))
+
 echo "[Interface]
 PrivateKey = $PrivateKey
 Address = 10.8.1.0/24
 DNS = 1.1.1.1, 1.0.0.1
 MTU = 1280
-ListenPort = 443
+ListenPort = $port_number
 Jc = 4
 Jmin = 40
 Jmax = 70
