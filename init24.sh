@@ -49,14 +49,14 @@ echo "Сетевые интерфейсы:"
 echo "$interfaces"
 if echo "$interfaces" | grep -q "ens3"; then
     echo "Интерфейс ens3 найден. Применяем правила iptables..."
-    IPTABLES_RULES="iptables -t nat -A POSTROUTING -s $MASK -o ens3 -j MASQUERADE; iptables -A INPUT -p udp -m udp --dport $PORT -j ACCEPT; iptables -A FORWARD -i wg0 -j ACCEPT; iptables -A FORWARD -o wg0 -j ACCEPT;"
-    POST_DOWN_RULES="iptables -t nat -D POSTROUTING -s $MASK -o ens3 -j MASQUERADE; iptables -D INPUT -p udp -m udp --dport $PORT -j ACCEPT; iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT;"
+    IPTABLES_RULES="iptables -t nat -A POSTROUTING -s $MASK -o ens3 -j MASQUERADE; iptables -A INPUT -p udp -m udp --dport $port_number -j ACCEPT; iptables -A FORWARD -i wg0 -j ACCEPT; iptables -A FORWARD -o wg0 -j ACCEPT;"
+    POST_DOWN_RULES="iptables -t nat -D POSTROUTING -s $MASK -o ens3 -j MASQUERADE; iptables -D INPUT -p udp -m udp --dport $port_number -j ACCEPT; iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT;"
 elif echo "$interfaces" | grep -q "eth1" && echo "$interfaces" | grep -q "eth0"; then
     echo "Интерфейсы eth1 и eth0 найдены. Применяем другие правила iptables..."
     # Пример правил iptables для интерфейсов eth1 и eth0
-    IPTABLES_RULES="iptables -t nat -A POSTROUTING -s $MASK -o eth0 -j MASQUERADE; iptables -A INPUT -p udp -m udp --dport $PORT -j ACCEPT; iptables -A FORWARD -i wg0 -j ACCEPT; iptables -A FORWARD -o wg0 -j ACCEPT;
-    iptables -t nat -A POSTROUTING -s $MASK -o eth1 -j MASQUERADE; iptables -A INPUT -p udp -m udp --dport $PORT -j ACCEPT; iptables -A FORWARD -i wg0 -j ACCEPT; iptables -A FORWARD -o wg0 -j ACCEPT;"
-    POST_DOWN_RULES="iptables -t nat -D POSTROUTING -s $MASK -o eth0 -j MASQUERADE; iptables -D INPUT -p udp -m udp --dport $PORT -j ACCEPT; iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -s $MASK -o eth1 -j MASQUERADE; iptables -D INPUT -p udp -m udp --dport $PORT -j ACCEPT; iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT;"
+    IPTABLES_RULES="iptables -t nat -A POSTROUTING -s $MASK -o eth0 -j MASQUERADE; iptables -A INPUT -p udp -m udp --dport $port_number -j ACCEPT; iptables -A FORWARD -i wg0 -j ACCEPT; iptables -A FORWARD -o wg0 -j ACCEPT;
+    iptables -t nat -A POSTROUTING -s $MASK -o eth1 -j MASQUERADE; iptables -A INPUT -p udp -m udp --dport $port_number -j ACCEPT; iptables -A FORWARD -i wg0 -j ACCEPT; iptables -A FORWARD -o wg0 -j ACCEPT;"
+    POST_DOWN_RULES="iptables -t nat -D POSTROUTING -s $MASK -o eth0 -j MASQUERADE; iptables -D INPUT -p udp -m udp --dport $port_number -j ACCEPT; iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -s $MASK -o eth1 -j MASQUERADE; iptables -D INPUT -p udp -m udp --dport $port_number -j ACCEPT; iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT;"
 
 else
     echo "Не найдены соответствующие интерфейсы."
