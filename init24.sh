@@ -41,10 +41,30 @@ H2=$(shuf -i5-2147483647 -n1)
 H3=$(shuf -i5-2147483647 -n1)
 H4=$(shuf -i5-2147483647 -n1)
 port_number=$((RANDOM % 60000 + 40000))
+MASK="10.8.1.0/24"
+
+# создание службы
+interfaces=$(ip -o link show | awk -F': ' '{print $2}')
+echo "Сетевые интерфейсы:"
+echo "$interfaces"
+if echo "$interfaces" | grep -q "ens3"; then
+    echo "Интерфейс ens3 найден. Применяем правила iptables..."
+    IPTABLES_RULES="iptables -t nat -A POSTROUTING -s $MASK -o ens3 -j MASQUERADE; iptables -A INPUT -p udp -m udp --dport $PORT -j ACCEPT; iptables -A FORWARD -i wg0 -j ACCEPT; iptables -A FORWARD -o wg0 -j ACCEPT;"
+    POST_DOWN_RULES="iptables -t nat -D POSTROUTING -s $MASK -o ens3 -j MASQUERADE; iptables -D INPUT -p udp -m udp --dport $PORT -j ACCEPT; iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT;"
+elif echo "$interfaces" | grep -q "eth1" && echo "$interfaces" | grep -q "eth0"; then
+    echo "Интерфейсы eth1 и eth0 найдены. Применяем другие правила iptables..."
+    # Пример правил iptables для интерфейсов eth1 и eth0
+    IPTABLES_RULES="iptables -t nat -A POSTROUTING -s $MASK -o eth0 -j MASQUERADE; iptables -A INPUT -p udp -m udp --dport $PORT -j ACCEPT; iptables -A FORWARD -i wg0 -j ACCEPT; iptables -A FORWARD -o wg0 -j ACCEPT;
+    iptables -t nat -A POSTROUTING -s $MASK -o eth1 -j MASQUERADE; iptables -A INPUT -p udp -m udp --dport $PORT -j ACCEPT; iptables -A FORWARD -i wg0 -j ACCEPT; iptables -A FORWARD -o wg0 -j ACCEPT;"
+    POST_DOWN_RULES="iptables -t nat -D POSTROUTING -s $MASK -o eth0 -j MASQUERADE; iptables -D INPUT -p udp -m udp --dport $PORT -j ACCEPT; iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -s $MASK -o eth1 -j MASQUERADE; iptables -D INPUT -p udp -m udp --dport $PORT -j ACCEPT; iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT;"
+
+else
+    echo "Не найдены соответствующие интерфейсы."
+fi
 
 echo "[Interface]
 PrivateKey = $PrivateKey
-Address = 10.8.1.0/24
+Address = $MASK
 DNS = 1.1.1.1, 1.0.0.1
 MTU = 1280
 ListenPort = $port_number
@@ -57,31 +77,14 @@ H1 = ${H1}
 H2 = ${H2}
 H3 = ${H3}
 H4 = ${H4}
+PostUp = $IPTABLES_RULES
+PostDown = $POST_DOWN_RULES
 
 [Peer]
 PublicKey = $client_public_key
 PresharedKey = $PSK
 AllowedIPs = 10.8.1.2/32" > $CONFIG_FILE
 
-# создание службы
-interfaces=$(ip -o link show | awk -F': ' '{print $2}')
-echo "Сетевые интерфейсы:"
-echo "$interfaces"
-if echo "$interfaces" | grep -q "ens3"; then
-    echo "Интерфейс ens3 найден. Применяем правила iptables..."
-    IPTABLES_RULES="iptables -t nat -A POSTROUTING -s $MASK -o ens3 -j MASQUERADE; iptables -A INPUT -p udp -m udp --dport $PORT -j ACCEPT; iptables -A FORWARD -i wg0 -j ACCEPT; iptables -A FORWARD -o wg0 -j ACCEPT;"
-
-elif echo "$interfaces" | grep -q "eth1" && echo "$interfaces" | grep -q "eth0"; then
-    echo "Интерфейсы eth1 и eth0 найдены. Применяем другие правила iptables..."
-    # Пример правил iptables для интерфейсов eth1 и eth0
-    IPTABLES_RULES="iptables -t nat -A POSTROUTING -s $MASK -o eth0 -j MASQUERADE; iptables -A INPUT -p udp -m udp --dport $PORT -j ACCEPT; iptables -A FORWARD -i wg0 -j ACCEPT; iptables -A FORWARD -o wg0 -j ACCEPT;
-    iptables -t nat -A POSTROUTING -s $MASK -o eth1 -j MASQUERADE; iptables -A INPUT -p udp -m udp --dport $PORT -j ACCEPT; iptables -A FORWARD -i wg0 -j ACCEPT; iptables -A FORWARD -o wg0 -j ACCEPT;"
-else
-    echo "Не найдены соответствующие интерфейсы."
-fi
-
-MASK=$(grep -oP 'Address\s*=\s*\K[^\s]+' $CONFIG_FILE)
-PORT=$(grep -oP 'ListenPort\s*=\s*\K\d+' $CONFIG_FILE)
 
 SERVICE_FILE="/etc/systemd/system/black.service"
 
@@ -92,7 +95,6 @@ After=network.target
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/wg-quick up /opt/amnezia/awg/wg0.conf
-ExecStartPost=/bin/bash -c '$IPTABLES_RULES'
 ExecStop=/usr/bin/wg-quick down /opt/amnezia/awg/wg0.conf
 RemainAfterExit=yes
 
