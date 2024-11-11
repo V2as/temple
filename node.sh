@@ -2,6 +2,7 @@
 SSL_KEY=$1
 
 SSL_PATH="/var/lib/marzban-node/ssl_client_cert.pem"
+touch $SSL_PATH
 DOCKER_COMPOSE_PATH="/app/Marzban-node/docker-compose.yml"
 HAPROXY_CFG_PATH="/etc/haproxy/haproxy.cfg"
 
