@@ -3,7 +3,7 @@ SSL_KEY=$1
 
 SSL_PATH="/var/lib/marzban-node/ssl_client_cert.pem"
 touch $SSL_PATH
-DOCKER_COMPOSE_PATH="/app/Marzban-node/docker-compose.yml"
+DOCKER_COMPOSE_PATH="/app/docker-compose.yml"
 HAPROXY_CFG_PATH="/etc/haproxy/haproxy.cfg"
 
 sudo apt-get update && sudo apt-get upgrade -y
@@ -80,5 +80,5 @@ backend reality
     server srv1 127.0.0.1:12000 send-proxy-v2 tfo" > $HAPROXY_CFG_PATH
 
 
-sudo docker compose up -d
+sudo docker compose -f $DOCKER_COMPOSE_PATH up -d
 
