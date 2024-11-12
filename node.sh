@@ -10,7 +10,7 @@ sudo apt-get update && sudo apt-get upgrade -y
 sudo apt install socat -y && sudo apt install curl socat -y && apt install git -y
 sudo mkdir -p /app
 git clone https://github.com/Gozargah/Marzban-node /app
-sudo curl -fsSL https://get.docker.com | sh
+# sudo curl -fsSL https://get.docker.com | sh
 sudo mkdir -p /var/lib/marzban-node/
 
 rm $DOCKER_COMPOSE_PATH
