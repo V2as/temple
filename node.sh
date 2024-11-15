@@ -72,8 +72,7 @@ listen front
     tcp-request inspect-delay 5s
     tcp-request content accept if { req_ssl_hello_type 1 }
 
-    use_backend reality if { req.ssl_sni -i end telegram.org }
-    # Правило ухода на бэкенд panel если SNI sub.example.com
+    use_backend reality
 
 backend reality
     mode tcp
