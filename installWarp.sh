@@ -3,6 +3,6 @@ echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] ht
 apt-get update && apt-get install cloudflare-warp -y
 #  
 warp-cli --accept-tos registration new
-warp-cli mode proxy
-warp-cli proxy port 9091
-warp-cli connect
+warp-cli --accept-tos mode proxy
+warp-cli --accept-tos proxy port 9091
+warp-cli --accept-tos connect
