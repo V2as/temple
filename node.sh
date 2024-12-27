@@ -80,7 +80,4 @@ backend reality
 
 
 sudo docker compose -f $DOCKER_COMPOSE_PATH up -d
-docker run --restart=always -itd \
-    --name warp_socks_v3 \
-    -p 9091:9091 \
-    monius/docker-warp-socks:v3
+
