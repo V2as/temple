@@ -77,7 +77,7 @@ listen front
 
 backend reality
     mode tcp
-    server srv1 127.0.0.1:12000 send-proxy-v2 tfo" > $HAPROXY_CFG_PATH
+    server srv1 127.0.0.1:12000" > $HAPROXY_CFG_PATH
     
 apt update
 apt install -y nginx-full
@@ -170,3 +170,8 @@ warp-cli --accept-tos registration new
 warp-cli --accept-tos mode proxy
 warp-cli --accept-tos proxy port 9091
 warp-cli --accept-tos connect
+
+echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
+echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
+sysctl -p
+
