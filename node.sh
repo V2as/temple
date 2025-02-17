@@ -79,7 +79,11 @@ backend reality
     mode tcp
     server srv1 127.0.0.1:12000 send-proxy-v2 tfo" > $HAPROXY_CFG_PATH
     
-echo "load_module modules/ngx_stream_module.so;
+apt update
+apt install -y nginx-full
+
+cat << EOF > "$NGINX_CFG_PATH"
+load_module modules/ngx_stream_module.so;
 
 user root;
 worker_processes auto;
@@ -95,30 +99,30 @@ http {
     log_format main '[$time_local] $remote_addr "$http_referer" "$http_user_agent"';
     access_log /var/log/nginx/access.log main;
 
-    map $http_upgrade $connection_upgrade {
+    map \$http_upgrade \$connection_upgrade {
         default upgrade;
         "" close;
     }
 
-    # Определяем переменную $proxy_add_forwarded вручную
-    map $proxy_protocol_addr $proxy_forwarded_elem {
-        ~^[0-9.]+$        "for=$proxy_protocol_addr";
-        ~^[0-9A-Fa-f:.]+$ "for=\"[$proxy_protocol_addr]\"";
-        default           "for=unknown";
+    # Определяем переменную \$proxy_add_forwarded вручную
+    map \$proxy_protocol_addr \$proxy_forwarded_elem {
+        ~^[0-9.]+$                "for=\$proxy_protocol_addr";
+        ~^[0-9A-Fa-f:.]+$ "for=\"[\$proxy_protocol_addr]\"";
+        default                        "for=unknown";
     }
 
-    map $http_forwarded $proxy_add_forwarded {
-        "~^(,[ \\t]*)*([!#$%&'*+.^_`|~0-9A-Za-z-]+=([!#$%&'*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?(;([!#$%&'*+.^_`|~0-9A-Za-z-]+=([!#$%&'*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?)*([ \\t]*,([ \\t]*([!#$%&'*+.^_`|~0-9A-Za-z-]+=([!#$%&'*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?(;([!#$%&'*+.^_`|~0-9A-Za-z-]+=([!#$%&'*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?)*)?)*$" "$http_forwarded, $proxy_forwarded_elem";
-        default "$proxy_forwarded_elem";
+    map \$http_forwarded \$proxy_add_forwarded {
+        "~^(,[ \\t]*)*([!#$%&'*+.^_`|~0-9A-Za-z-]+=([!#$%&'*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?(;([!#$%&'*+.^_`|~0-9A-Za-z-]+=([!#$%&'*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?)*([ \\t]*,([ \\t]*([!#$%&'*+.^_`|~0-9A-Za-z-]+=([!#$%&'*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?(;([!#$%&'*+.^_`|~0-9A-Za-z-]+=([!#$%&'*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?)*)?)*$" "\$http_forwarded, \$proxy_forwarded_elem";
+        default "\$proxy_forwarded_elem";
     }
 
     server {
         listen 80;
         listen [::]:80;
-        return 301 https://$host$request_uri;
+        return 301 https://\$host\$request_uri;
     }
 
-    
+
     server {
         listen 127.0.0.1:8001 ssl proxy_protocol;
 
@@ -137,24 +141,25 @@ http {
             proxy_pass https://blackmore.cloud;
             resolver 1.1.1.1;
 
-            proxy_set_header Host $proxy_host;
+            proxy_set_header Host \$proxy_host;
             proxy_http_version 1.1;
-            proxy_cache_bypass $http_upgrade;
+            proxy_cache_bypass \$http_upgrade;
             proxy_ssl_server_name on;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection $connection_upgrade;
-            proxy_set_header X-Real-IP $proxy_protocol_addr; # Важно: $proxy_protocol_addr для reality
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-            proxy_set_header X-Forwarded-Host $host;
-            proxy_set_header X-Forwarded-Port $server_port;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection \$connection_upgrade;
+            proxy_set_header X-Real-IP \$proxy_protocol_addr; # Важно: \$proxy_protocol_addr для reality
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
+            proxy_set_header X-Forwarded-Host \$host;
+            proxy_set_header X-Forwarded-Port \$server_port;
 
             proxy_connect_timeout 60s;
             proxy_send_timeout 60s;
             proxy_read_timeout 60s;
         }
     }
-}" > $NGINX_CFG_PATH
+}
+EOF
 
 sudo docker compose -f $DOCKER_COMPOSE_PATH up -d
 curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | sudo gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
