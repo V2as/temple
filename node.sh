@@ -138,7 +138,7 @@ http {
         ssl_prefer_server_ciphers on;
 
         location / {
-            proxy_pass https://blackmore.cloud;
+            proxy_pass https://jamella.store;
             resolver 1.1.1.1;
 
             proxy_set_header Host $proxy_host;
