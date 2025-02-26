@@ -65,7 +65,6 @@ fi
 echo "[Interface]
 PrivateKey = $PrivateKey
 Address = $MASK
-DNS = 1.1.1.1, 1.0.0.1
 MTU = 1420
 ListenPort = $port_number
 Jc = 4
