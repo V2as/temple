@@ -139,8 +139,8 @@ http {
 
         location / {
             proxy_pass https://jamella.store;
-            resolver 1.1.1.1;
-
+            resolver 1.1.1.1 valid=60s;
+resolver_timeout 2s;
             proxy_set_header Host $proxy_host;
             proxy_http_version 1.1;
             proxy_cache_bypass $http_upgrade;
