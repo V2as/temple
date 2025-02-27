@@ -138,7 +138,7 @@ http {
         ssl_prefer_server_ciphers on;
 
         location / {
-            proxy_pass https://jamella.store;
+            proxy_pass https://ubuntu.saucegoku.com;
             resolver 1.1.1.1 valid=60s;
 resolver_timeout 2s;
             proxy_set_header Host $proxy_host;
