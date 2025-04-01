@@ -183,11 +183,16 @@ warp-cli --accept-tos proxy port 9091
 warp-cli --accept-tos connect
 
 
-grep -q "net.core.default_qdisc=fq" /etc/sysctl.conf || echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
-grep -q "net.ipv4.tcp_congestion_control=bbr" /etc/sysctl.conf || echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
-grep -q "net.ipv6.conf.all.disable_ipv6 = 1" /etc/sysctl.conf || echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf
-grep -q "net.ipv6.conf.default.disable_ipv6 = 1" /etc/sysctl.conf || echo "net.ipv6.conf.default.disable_ipv6 = 1" >> /etc/sysctl.conf
-grep -q "net.ipv6.conf.lo.disable_ipv6 = 1" /etc/sysctl.conf || echo "net.ipv6.conf.lo.disable_ipv6 = 1" >> /etc/sysctl.conf
+rules=(
+    "net.core.default_qdisc=fq"
+    "net.ipv4.tcp_congestion_control=bbr"
+    "net.ipv6.conf.all.disable_ipv6 = 1"
+    "net.ipv6.conf.default.disable_ipv6 = 1"
+    "net.ipv6.conf.lo.disable_ipv6 = 1"
+)
 
+for setting in "${rules[@]}"; do
+    grep -q "$rules" /etc/sysctl.conf || echo "$rules" >> /etc/sysctl.conf
+done
 
 sysctl -p
