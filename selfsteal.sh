@@ -97,32 +97,80 @@ pid /run/nginx.pid;
 
 error_log /var/log/nginx/error.log;
 
+include /etc/nginx/modules-enabled/*.conf;
+
 events {
     worker_connections 1024;
 }
 
 http {
-    # ... (остальные общие настройки)
+    sendfile on;
+    tcp_nopush on;
+    types_hash_max_size 2048;
+
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384";
+    ssl_prefer_server_ciphers on;
+
+    log_format proxlog '$status ($proxy_protocol_addr) $remote_user [$time_local]';
+    access_log /var/log/nginx/access.log proxlog;
+
+    gzip on;
+
+    server {
+        access_log off;
+        listen 127.0.0.1:8081;
+        return 204;
+    }
 
     server {
         listen 127.0.0.1:8001 ssl http2 default_server proxy_protocol;
         server_name _;
+
+        set_real_ip_from 127.0.0.1;
+        real_ip_header proxy_protocol;
+
         ssl_reject_handshake on;
+        ssl_protocols TLSv1.2 TLSv1.3;
+        ssl_session_timeout 3m;
+        ssl_session_cache shared:SSL:3m;
+
+        access_log /var/log/nginx/access.log proxlog;
     }
 
     server {
         listen 127.0.0.1:8001 ssl http2 proxy_protocol;
         server_name ${SELF_STEAL_DOMAIN};
 
+        set_real_ip_from 127.0.0.1;
+        real_ip_header proxy_protocol;
+
         ssl_certificate /root/.acme.sh/${SELF_STEAL_DOMAIN}_ecc/fullchain.cer;
         ssl_certificate_key /root/.acme.sh/${SELF_STEAL_DOMAIN}_ecc/${SELF_STEAL_DOMAIN}.key;
 
-        # ... (остальные настройки сервера)
+        ssl_protocols TLSv1.2 TLSv1.3;
+        ssl_ciphers "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384";
+        ssl_prefer_server_ciphers on;
+
+        ssl_stapling on;
+        ssl_stapling_verify on;
+        resolver 1.1.1.1 valid=60s;
+        resolver_timeout 2s;
+
+        auth_basic "Access restricted, enter login & password";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+
+        root /var/mysite;
+        index index.html;
     }
 }
 EOF
 
-sed -i "s/\${SELF_STEAL_DOMAIN}/${SELF_STEAL_DOMAIN}/g" "$NGINX_CFG_PATH"
+escaped_domain=$(printf '%s\n' "$SELF_STEAL_DOMAIN" | sed 's/[\/&]/\\&/g')
+sed -i "s/\${SELF_STEAL_DOMAIN}/$escaped_domain/g" "$NGINX_CFG_PATH"
 
 
 sudo apt install cron socat
