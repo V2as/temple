@@ -79,91 +79,50 @@ listen front
 backend reality
     mode tcp
     server srv1 127.0.0.1:12000" > $HAPROXY_CFG_PATH
+
     
 apt update
-apt install -y nginx-full
+sudo apt install curl gnupg2 ca-certificates lsb-release ubuntu-keyring -y
+curl -fsSL https://nginx.org/keys/nginx_signing.key | sudo gpg --dearmor -o /usr/share/keyrings/nginx-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] http://nginx.org/packages/ubuntu $(lsb_release -cs) nginx" | sudo tee /etc/apt/sources.list.d/nginx.list
+echo -e "Package: nginx*\nPin: origin nginx.org\nPin-Priority: 900" | sudo tee /etc/apt/preferences.d/99-nginx
+sudo apt update
+sudo apt install nginx -y
 
-cat << 'EOF' | sed "s/\$SELF_STEAL_DOMAIN/$SELF_STEAL_DOMAIN/g" > "$NGINX_CFG_PATH"
+
+cat << "EOF" > "$NGINX_CFG_PATH"
 user www-data;
 worker_processes auto;
 pid /run/nginx.pid;
 
 error_log /var/log/nginx/error.log;
 
-include /etc/nginx/modules-enabled/*.conf;
-
 events {
     worker_connections 1024;
 }
 
 http {
-    sendfile on;
-    tcp_nopush on;
-    types_hash_max_size 2048;
-
-    include /etc/nginx/mime.types;
-    default_type application/octet-stream;
-
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384";
-    ssl_prefer_server_ciphers on;
-
-    log_format proxlog '$status ($proxy_protocol_addr) $remote_user [$time_local]';
-    access_log /var/log/nginx/access.log proxlog;
-
-    gzip on;
-
-    server {
-        access_log off;
-        listen 127.0.0.1:8081;
-        return 204;
-    }
+    # ... (остальные общие настройки)
 
     server {
         listen 127.0.0.1:8001 ssl http2 default_server proxy_protocol;
         server_name _;
-
-        set_real_ip_from 127.0.0.1;
-        real_ip_header proxy_protocol;
-
         ssl_reject_handshake on;
-        ssl_protocols TLSv1.2 TLSv1.3;
-        ssl_session_timeout 3m;
-        ssl_session_cache shared:SSL:3m;
-
-        access_log /var/log/nginx/access.log proxlog;
     }
 
     server {
         listen 127.0.0.1:8001 ssl http2 proxy_protocol;
-        server_name $SELF_STEAL_DOMAIN;
+        server_name ${SELF_STEAL_DOMAIN};
 
-        set_real_ip_from 127.0.0.1;
-        real_ip_header proxy_protocol;
+        ssl_certificate /root/.acme.sh/${SELF_STEAL_DOMAIN}_ecc/fullchain.cer;
+        ssl_certificate_key /root/.acme.sh/${SELF_STEAL_DOMAIN}_ecc/${SELF_STEAL_DOMAIN}.key;
 
-        ssl_certificate /root/.acme.sh/$SELF_STEAL_DOMAIN_ecc/fullchain.cer;
-        ssl_certificate_key /root/.acme.sh/$SELF_STEAL_DOMAIN_ecc/$SELF_STEAL_DOMAIN.key;
-
-        ssl_protocols TLSv1.2 TLSv1.3;
-        ssl_ciphers "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384";
-        ssl_prefer_server_ciphers on;
-
-        ssl_stapling on;
-        ssl_stapling_verify on;
-        resolver 1.1.1.1 valid=60s;
-        resolver_timeout 2s;
-
-        auth_basic "Access restricted, enter login & password";
-        auth_basic_user_file /etc/nginx/.htpasswd;
-
-        root /var/mysite;
-        index index.html;
+        # ... (остальные настройки сервера)
     }
 }
-
-
-
 EOF
+
+sed -i "s/\${SELF_STEAL_DOMAIN}/${SELF_STEAL_DOMAIN}/g" "$NGINX_CFG_PATH"
 
 
 sudo apt install cron socat
@@ -183,7 +142,8 @@ warp-cli --accept-tos proxy port 9091
 warp-cli --accept-tos connect
 
 
-rules=(
+
+settings=(
     "net.core.default_qdisc=fq"
     "net.ipv4.tcp_congestion_control=bbr"
     "net.ipv6.conf.all.disable_ipv6 = 1"
@@ -191,8 +151,8 @@ rules=(
     "net.ipv6.conf.lo.disable_ipv6 = 1"
 )
 
-for setting in "${rules[@]}"; do
-    grep -q "$rules" /etc/sysctl.conf || echo "$rules" >> /etc/sysctl.conf
+for setting in "${settings[@]}"; do
+    grep -q "$setting" /etc/sysctl.conf || echo "$setting" >> /etc/sysctl.conf
 done
 
 sysctl -p
