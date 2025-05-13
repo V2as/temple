@@ -14,7 +14,7 @@ sudo mkdir -p /app
 git clone https://github.com/Gozargah/Marzban-node /app
 # sudo curl -fsSL https://get.docker.com | sh
 sudo mkdir -p /var/lib/marzban-node/
-
+sudo mkdir -p /var/lib/marzban/certs/
 rm $DOCKER_COMPOSE_PATH
 echo "$SSL_KEY" > $SSL_PATH
 echo "services:
