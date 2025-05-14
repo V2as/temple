@@ -79,7 +79,7 @@ listen front
 
 backend reality
     mode tcp
-    server srv1 127.0.0.1:12000" > $HAPROXY_CFG_PATH
+    server srv1 127.0.0.1:12000 send-proxy-v2 tfo" > $HAPROXY_CFG_PATH
 
 
 curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | sudo gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
