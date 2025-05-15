@@ -7,6 +7,7 @@ SSL_PATH="/var/lib/marzban-node/ssl_client_cert.pem"
 touch $SSL_PATH
 DOCKER_COMPOSE_PATH="/app/docker-compose.yml"
 HAPROXY_CFG_PATH="/etc/haproxy/haproxy.cfg"
+NGINX_CFG_PATH="/etc/nginx/nginx.conf"
 
 sudo apt-get update && sudo apt-get upgrade -y
 sudo apt install socat -y && sudo apt install curl socat -y && apt install git -y
