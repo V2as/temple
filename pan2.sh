@@ -81,6 +81,86 @@ backend reality
     mode tcp
     server srv1 127.0.0.1:12000 send-proxy-v2 tfo" > $HAPROXY_CFG_PATH
 
+apt install -y nginx-full
+
+cat << 'EOF' > "$NGINX_CFG_PATH"
+load_module modules/ngx_stream_module.so;
+
+user root;
+worker_processes auto;
+
+error_log /var/log/nginx/error.log notice;
+pid /var/run/nginx.pid;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    log_format main '[$time_local] $remote_addr "$http_referer" "$http_user_agent"';
+    access_log /var/log/nginx/access.log main;
+
+    map $http_upgrade $connection_upgrade {
+        default upgrade;
+        "" close;
+    }
+
+    # Определяем переменную $proxy_add_forwarded вручную
+    map $proxy_protocol_addr $proxy_forwarded_elem {
+        ~^[0-9.]+$                "for=$proxy_protocol_addr";
+        ~^[0-9A-Fa-f:.]+$ "for=\"[$proxy_protocol_addr]\"";
+        default                        "for=unknown";
+    }
+
+    map $http_forwarded $proxy_add_forwarded {
+        "~^(,[ \\t]*)*([!#$%&'*+.^_`|~0-9A-Za-z-]+=([!#$%&'*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?(;([!#$%&'*+.^_`|~0-9A-Za-z-]+=([!#$%&'*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?)*([ \\t]*,([ \\t]*([!#$%&'*+.^_`|~0-9A-Za-z-]+=([!#$%&'*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?(;([!#$%&'*+.^_`|~0-9A-Za-z-]+=([!#$%&'*+.^_`|~0-9A-Za-z-]+|\"([\\t \\x21\\x23-\\x5B\\x5D-\\x7E\\x80-\\xFF]|\\\\[\\t \\x21-\\x7E\\x80-\\xFF])*\"))?)*)?)*$" "$http_forwarded, $proxy_forwarded_elem";
+        default "$proxy_forwarded_elem";
+    }
+
+    server {
+        listen 80;
+        listen [::]:80;
+        return 301 https://$host$request_uri;
+    }
+
+
+    server {
+        listen 127.0.0.1:8001 ssl proxy_protocol;
+
+        set_real_ip_from 127.0.0.1;
+        real_ip_header proxy_protocol;
+
+        server_name api.blackstormrage2.space goku.blackstormrage2.space;
+
+        ssl_certificate /var/lib/marzban/certs/fullchain.pem;
+        ssl_certificate_key /var/lib/marzban/certs/key.pem;
+        ssl_protocols TLSv1.2 TLSv1.3;
+        ssl_ciphers TLS13_AES_128_GCM_SHA256:TLS13_AES_256_GCM_SHA384:TLS13_CHACHA20_POLY1305_SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305;
+        ssl_prefer_server_ciphers on;
+
+        location / {
+            proxy_pass https://ubuntu.saucegoku.com;
+            resolver 1.1.1.1 valid=60s;
+resolver_timeout 2s;
+            proxy_set_header Host $proxy_host;
+            proxy_http_version 1.1;
+            proxy_cache_bypass $http_upgrade;
+            proxy_ssl_server_name on;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+            proxy_set_header X-Real-IP $proxy_protocol_addr; # Важно: $proxy_protocol_addr для reality
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header X-Forwarded-Host $host;
+            proxy_set_header X-Forwarded-Port $server_port;
+
+            proxy_connect_timeout 60s;
+            proxy_send_timeout 60s;
+            proxy_read_timeout 60s;
+        }
+    }
+}
+EOF
 
 curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | sudo gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
 echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
