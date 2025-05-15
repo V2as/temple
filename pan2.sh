@@ -80,6 +80,9 @@ listen front
 backend reality
     mode tcp
     server srv1 127.0.0.1:12000 send-proxy-v2 tfo" > $HAPROXY_CFG_PATH
+sudo apt install cron socat
+curl https://get.acme.sh | sh -s email=ling.ekb@gmail.com
+~/.acme.sh/acme.sh --set-default-ca --server letsencrypt --issue --standalone -d $DOMAIN --key-file /var/lib/marzban/certs/key.pem  --fullchain-file /var/lib/marzban/certs/fullchain.pem
 
 apt install -y nginx-full
 
@@ -175,9 +178,7 @@ echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
 echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
 sysctl -p
 
-sudo apt install cron socat
-curl https://get.acme.sh | sh -s email=ling.ekb@gmail.com
-~/.acme.sh/acme.sh --set-default-ca --server letsencrypt --issue --standalone -d $DOMAIN --key-file /var/lib/marzban/certs/key.pem  --fullchain-file /var/lib/marzban/certs/fullchain.pem
 
 sudo docker compose -f $DOCKER_COMPOSE_PATH up -d
 systemctl restart haproxy
+systemct restart nginx
