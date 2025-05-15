@@ -181,4 +181,4 @@ sysctl -p
 
 sudo docker compose -f $DOCKER_COMPOSE_PATH up -d
 systemctl restart haproxy
-systemct restart nginx
+systemctl restart nginx
