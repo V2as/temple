@@ -42,7 +42,7 @@ H2=$(shuf -i5-2147483647 -n1)
 H3=$(shuf -i5-2147483647 -n1)
 H4=$(shuf -i5-2147483647 -n1)
 port_number=$((RANDOM % 10000 + 10000))
-MASK="10.8.1.3/24"
+MASK="10.8.1.0/24"
 
 
 echo "[Interface]
@@ -92,4 +92,4 @@ WantedBy=multi-user.target" > $SERVICE_FILE
 systemctl daemon-reload
 systemctl enable black.service
 systemctl start black.service
-iptables-save -t nat
+
