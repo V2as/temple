@@ -1,5 +1,6 @@
 #!/bin/bash
 PUBKEY=$1
+PARAMS=$2
 
 touch /home/awgmode.txt
 echo "server" > /home/awgmode.txt
@@ -49,20 +50,12 @@ MASK="10.8.0.0/16"
 echo "[Interface]
 PrivateKey = $PrivateKey
 Address = $MASK
-MTU = 1420
-ListenPort = $port_number
-Jc = 4
-Jmin = 20
-Jmax = 50
-S1 = 28
-S2 = 47
-H1 = ${H1}
-H2 = ${H2}
-H3 = ${H3}
-H4 = ${H4}
+$PARAMS
+PostUp = ip -4 rule add from \$(ip -4 addr show eth0 | awk '/inet/ {print \$2}' | cut -d/ -f1) table main
+PostDown = ip -4 rule del from \$(ip -4 addr show eth0 | awk '/inet/ {print \$2}' | cut -d/ -f1) table main
 
 #external node
 [Peer]
 PublicKey = $PUBKEY
-AllowedIPs = 10.8.1.0/32, 0.0.0.0/0
+AllowedIPs = 10.8.1.0/32, 0.0.0.0/0" > $CONFIG_FILE
 
