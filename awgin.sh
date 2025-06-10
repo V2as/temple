@@ -1,4 +1,6 @@
 #!/bin/bash
+PUBKEY=$1
+
 touch /home/awgmode.txt
 echo "server" > /home/awgmode.txt
 sed -i 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources
@@ -58,38 +60,9 @@ H1 = ${H1}
 H2 = ${H2}
 H3 = ${H3}
 H4 = ${H4}
-PostUp = iptables -t nat -A POSTROUTING -o `ip route | awk '/default/ {print $5; exit}'` -j MASQUERADE
-PostUp = ip rule add from `ip addr show $(ip route | awk '/default/ { print $5 }') | grep "inet" | grep -v "inet6" | head -n 1 | awk '/inet/ {print $2}' | awk -F/ '{print $1}'` table main
-PostDown = iptables -t nat -D POSTROUTING -o `ip route | awk '/default/ {print $5; exit}'` -j MASQUERADE
-PostDown = ip rule del from `ip addr show $(ip route | awk '/default/ { print $5 }') | grep "inet" | grep -v "inet6" | head -n 1 | awk '/inet/ {print $2}' | awk -F/ '{print $1}'` table main
 
 #external node
 [Peer]
-PublicKey = L9cUi6tG2pMMNMPxvgL+6rFCMZv7p97WaPFBppRROwo=
-AllowedIPs = 10.8.1.3/32, 0.0.0.0/0
+PublicKey = $PUBKEY
+AllowedIPs = 10.8.1.0/32, 0.0.0.0/0
 
-[Peer]
-PublicKey = $client_public_key
-PresharedKey = $PSK
-AllowedIPs = 10.8.1.2/32" > $CONFIG_FILE
-
-
-SERVICE_FILE="/etc/systemd/system/black.service"
-
-echo "[Unit]
-Description=WireGuard via wg-quick
-After=network.target
-
-[Service]
-Type=oneshot
-ExecStart=/usr/bin/wg-quick up /opt/amnezia/awg/wg0.conf
-ExecStop=/usr/bin/wg-quick down /opt/amnezia/awg/wg0.conf
-RemainAfterExit=yes
-
-[Install]
-WantedBy=multi-user.target" > $SERVICE_FILE
-
-systemctl daemon-reload
-systemctl enable black.service
-systemctl start black.service
-iptables-save -t nat
