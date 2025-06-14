@@ -2,9 +2,9 @@ DASH_DOMAIN=$1
 SELF_STEAL_DOMAIN=$2
 
 ACME_SS="/root/.acme.sh/$SELF_STEAL_DOMAIN"
-ACME_DM_FC="/root/.acme.sh/$DASH_DOMAIN/fullchain.cer"
-ACME_DM_KEY="/root/.acme.sh/$DASH_DOMAIN/$DASH_DOMAIN.key"
-ACME_DM="/root/.acme.sh/$DASH_DOMAIN"
+ACME_DM_FC="/root/.acme.sh/${DASH_DOMAIN}_ecc/fullchain.cer"   
+ACME_DM_KEY="/root/.acme.sh/${DASH_DOMAIN}_ecc/$DASH_DOMAIN.key"
+ACME_DM="/root/.acme.sh/${DASH_DOMAIN}_ecc"
 
 HAPROXY_CFG_PATH="/etc/haproxy/haproxy.cfg"
 NGINX_CFG_PATH="/etc/nginx/nginx.conf"
@@ -198,7 +198,7 @@ echo "XRAY_SUBSCRIPTION_URL_PREFIX=\"$DASH_DOMAIN\"" >> /opt/marzban/.env
 echo "UVICORN_SSL_KEYFILE =\"$ACME_DM_KEY\"" >> /opt/marzban/.env
 echo "UVICORN_SSL_CERTFILE =\"$ACME_DM_FC\"" >> /opt/marzban/.env
 
-ACME_DIR="/root/.acme.sh/$DASH_DOMAIN"
+ACME_DIR="/root/.acme.sh/${DASH_DOMAIN}_ecc"
 
 COMPOSE_FILE="/opt/marzban/docker-compose.yml"
 
