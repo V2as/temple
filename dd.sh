@@ -198,3 +198,22 @@ echo "XRAY_SUBSCRIPTION_URL_PREFIX=\"$DASH_DOMAIN\"" >> /opt/marzban/.env
 echo "UVICORN_SSL_KEYFILE =\"$ACME_DM_KEY\"" >> /opt/marzban/.env
 echo "UVICORN_SSL_CERTFILE =\"$ACME_DM_FC\"" >> /opt/marzban/.env
 
+ACME_DIR="/root/.acme.sh/$DASH_DOMAIN"
+
+COMPOSE_FILE="/opt/marzban/docker-compose.yml"
+
+if [ ! -f "$COMPOSE_FILE" ]; then
+    echo "Ошибка: docker-compose.yml не найден"
+    exit 1
+fi
+
+if grep -q "$ACME_DIR:/root/.acme.sh" "$COMPOSE_FILE"; then
+    echo "Volume уже существует"
+    exit 0
+fi
+
+if command -v yq &> /dev/null; then
+    yq eval ".services.marzban.volumes += \"$ACME_DIR:$ACME_DIR\"" "$COMPOSE_FILE" > tmp.yml && mv tmp.yml "$COMPOSE_FILE"
+else
+    sed -i "/volumes:/a \      - $ACME_DIR:/root/.acme.sh" "$COMPOSE_FILE"
+fi
