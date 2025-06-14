@@ -189,8 +189,6 @@ echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
 echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
 sysctl -p
 
-echo 'SUDO_USERNAME="portaluser"' >> /opt/marzban/.env
-echo 'SUDO_PASSWORD="Btkpzcyu12!"' >> /opt/marzban/.env
 
 echo 'SUB_PROFILE_TITLE = "BLACKTEMPLE VPN BR"' >> /opt/marzban/.env
 echo 'SUB_UPDATE_INTERVAL = "2"' >> /opt/marzban/.env
