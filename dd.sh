@@ -207,7 +207,7 @@ if [ ! -f "$COMPOSE_FILE" ]; then
     exit 1
 fi
 
-if grep -q "$ACME_DIR:/root/.acme.sh" "$COMPOSE_FILE"; then
+if grep -q "$ACME_DIR:$ACME_DIR" "$COMPOSE_FILE"; then
     echo "Volume уже существует"
     exit 0
 fi
