@@ -215,7 +215,7 @@ fi
 if command -v yq &> /dev/null; then
     yq eval ".services.marzban.volumes += \"$ACME_DIR:$ACME_DIR\"" "$COMPOSE_FILE" > tmp.yml && mv tmp.yml "$COMPOSE_FILE"
 else
-    sed -i "/volumes:/a \      - $ACME_DIR:/root/.acme.sh" "$COMPOSE_FILE"
+    sed -i "/volumes:/a \      - $ACME_DIR:$ACME_DIR" "$COMPOSE_FILE"
 fi
 
 echo -e "nameserver 1.1.1.1\nnameserver 8.8.8.8" | sudo tee -a /etc/resolv.conf >/dev/null
