@@ -192,7 +192,7 @@ sysctl -p
 
 echo 'SUB_PROFILE_TITLE = "BLACKTEMPLE VPN BR"' >> /opt/marzban/.env
 echo 'SUB_UPDATE_INTERVAL = "2"' >> /opt/marzban/.env
-echo "XRAY_SUBSCRIPTION_URL_PREFIX=\"$DASH_DOMAIN\"" >> /opt/marzban/.env
+echo "XRAY_SUBSCRIPTION_URL_PREFIX=\"https://$DASH_DOMAIN\"" >> /opt/marzban/.env
 echo "UVICORN_SSL_KEYFILE =\"$ACME_DM_KEY\"" >> /opt/marzban/.env
 echo "UVICORN_SSL_CERTFILE =\"$ACME_DM_FC\"" >> /opt/marzban/.env
 
