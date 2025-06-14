@@ -217,3 +217,6 @@ if command -v yq &> /dev/null; then
 else
     sed -i "/volumes:/a \      - $ACME_DIR:/root/.acme.sh" "$COMPOSE_FILE"
 fi
+
+echo -e "nameserver 1.1.1.1\nnameserver 8.8.8.8" | sudo tee -a /etc/resolv.conf >/dev/null
+
