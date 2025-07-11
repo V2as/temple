@@ -9,7 +9,7 @@ ACME_DM="/root/.acme.sh/${DASH_DOMAIN}_ecc"
 HAPROXY_CFG_PATH="/etc/haproxy/haproxy.cfg"
 NGINX_CFG_PATH="/etc/nginx/nginx.conf"
 
-sudo apt install cron socat
+sudo apt install cron socat -y
 curl https://get.acme.sh | sh -s email=ling.ekb@gmail.com
 ~/.acme.sh/acme.sh --set-default-ca --server letsencrypt --issue --standalone -d $DASH_DOMAIN --key-file /var/lib/marzban/certs/key.pem  --fullchain-file /var/lib/marzban/certs/fullchain.pem
 ~/.acme.sh/acme.sh --set-default-ca --server letsencrypt --issue --standalone -d $SELF_STEAL_DOMAIN
