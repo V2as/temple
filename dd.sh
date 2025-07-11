@@ -216,5 +216,33 @@ else
     sed -i "/volumes:/a \      - $ACME_DIR:$ACME_DIR" "$COMPOSE_FILE"
 fi
 
-echo -e "nameserver 1.1.1.1\nnameserver 8.8.8.8" | sudo tee -a /etc/resolv.conf >/dev/null
+CONF_FILE="/etc/systemd/resolved.conf"
 
+if [ ! -f "$CONF_FILE" ]; then
+    echo "Ошибка: файл $CONF_FILE не найден!"
+    exit 1
+fi
+
+if [ "$(id -u)" -ne 0 ]; then
+    echo "Ошибка: скрипт должен быть запущен с правами root!"
+    exit 1
+fi
+
+cp "$CONF_FILE" "${CONF_FILE}.bak" && echo "Создана резервная копия: ${CONF_FILE}.bak"
+
+sed -i '/^#\?DNS=/d' "$CONF_FILE"  
+sed -i '/^#\?FallbackDNS=/d' "$CONF_FILE"  
+
+echo "DNS=1.1.1.1 1.0.0.1" >> "$CONF_FILE"
+echo "FallbackDNS=77.88.8.8 77.88.8.1" >> "$CONF_FILE"
+
+echo "Настройки DNS добавлены в $CONF_FILE"
+
+systemctl restart systemd-resolved && echo "Служба systemd-resolved перезапущена"
+
+echo "Проверка статуса:"
+systemctl status --no-pager systemd-resolved
+
+
+echo "Текущие DNS:"
+resolvectl dns
