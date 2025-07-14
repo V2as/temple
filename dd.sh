@@ -246,3 +246,5 @@ systemctl status --no-pager systemd-resolved
 
 echo "Текущие DNS:"
 resolvectl dns
+
+sudo bash -c "$(curl -sL https://raw.githubusercontent.com/V2as/SauceScripts/main/sauceban.sh)" @ restart
