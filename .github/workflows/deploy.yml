@@ -1,0 +1,45 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches: [master]  
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Install SSH tools
+        run: sudo apt-get install -y openssh-client rsync
+
+      - name: Debug Secrets
+        run: |
+          echo "Проверка доступности секретов:"
+          echo "USER: ${{ secrets.SERVER_USER != '' }}"
+          echo "IP: ${{ secrets.SERVER_IP != '' }}"
+          echo "KEY: ${{ secrets.SSH_PRIVATE_KEY != '' }}"
+
+      - name: Deploy Files
+        run: |
+          rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no" \
+          ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/opt/SauceBoard/
+
+      - name: Update Containers
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+          set -e
+          cd /opt/SauceBoard
+          docker compose down || true
+          docker compose pull
+          docker compose up -d --build
+          docker ps
+          EOF
