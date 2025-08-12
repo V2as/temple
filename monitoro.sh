@@ -3,6 +3,7 @@
 # === Парсинг аргументов ===
 while [[ "$#" -gt 0 ]]; do
     case $1 in
+        --repo_url) REPO_URL="$2"; shift ;;
         --db_host) DB_HOST="$2"; shift ;;
         --db_pass) DB_PASS="$2"; shift ;;
         --db_name) DB_NAME="$2"; shift ;;
@@ -10,7 +11,7 @@ while [[ "$#" -gt 0 ]]; do
         --ip) IP="$2"; shift ;;
         *)
             echo "[ERROR] Неизвестный аргумент: $1"
-            echo "Использование: $0 --db_host 1.1.1.1 --db_pass pass --db_name name --db_user user --ip 194.87.215.166"
+            echo "Использование: $0 --repo_url <URL> --db_host 1.1.1.1 --db_pass pass --db_name name --db_user user --ip 194.87.215.166"
             exit 1
         ;;
     esac
@@ -18,9 +19,9 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 # === Проверка обязательных аргументов ===
-if [[ -z "$DB_HOST" || -z "$DB_PASS" || -z "$DB_NAME" || -z "$DB_USER" || -z "$IP" ]]; then
-    echo "[ERROR] Не все аргументы заданы."
-    echo "Использование: $0 --db_host 1.1.1.1 --db_pass pass --db_name name --db_user user --ip 194.87.215.166"
+if [[ -z "$REPO_URL" || -z "$DB_HOST" || -z "$DB_PASS" || -z "$DB_NAME" || -z "$DB_USER" || -z "$IP" ]]; then
+    echo "[ERROR] Не все обязательные аргументы заданы."
+    echo "Использование: $0 --repo_url <URL> --db_host 1.1.1.1 --db_pass pass --db_name name --db_user user --ip 194.87.215.166"
     exit 1
 fi
 
@@ -53,7 +54,6 @@ else
 fi
 
 # === Настройки ===
-REPO_URL="https://github.com/username/repo.git"  # <-- замени на свой репозиторий
 INSTALL_DIR="/opt/$(basename "$REPO_URL" .git)"
 
 # === Клонирование репозитория ===
