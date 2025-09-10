@@ -11,7 +11,7 @@ mkdir -p /opt/Caddy
 # Создаем Caddyfile
 cat > /opt/Caddy/Caddyfile <<EOF
 {
-    email admin@example.com
+    email ling.ekb@gmail.com
 }
 
 :80 {
