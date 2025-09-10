@@ -7,9 +7,9 @@ fi
 
 DOMAIN1=$1
 DOMAIN2=$2
-
+mkdir -p /opt/Caddy
 # Создаем Caddyfile
-cat > Caddyfile <<EOF
+cat > /opt/Caddy/Caddyfile <<EOF
 {
     email admin@example.com
 }
@@ -28,7 +28,7 @@ $DOMAIN2 {
 EOF
 
 # Создаем docker-compose.yml
-cat > docker-compose.yml <<EOF
+cat > /opt/Caddy/docker-compose.yml <<EOF
 version: "3.9"
 
 services:
