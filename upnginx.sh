@@ -57,4 +57,4 @@ echo "Перезагружаем systemd..."
 systemctl daemon-reload
 systemctl enable nginx
 systemctl restart nginx
-echo "✅ Готово! Теперь можно проверить: systemctl cat nginx"
+echo "✅ Ура! Теперь можно проверить: systemctl cat nginx"
