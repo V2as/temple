@@ -31,10 +31,17 @@ add_to_service_section() {
     local key="$1"
     local value="$2"
 
+    # Проверяем, есть ли уже эта строка
     if grep -qE "^\s*${key}=" "$SERVICE_FILE"; then
         echo "   → Уже есть $key (пропущено)"
     else
-        # вставляем после строки с [Service]
+        # Проверяем, существует ли секция [Service], если нет - создаем
+        if ! grep -q "^\[Service\]" "$SERVICE_FILE"; then
+            echo "❌ Секция [Service] не найдена! Добавление невозможно."
+            exit 1
+        fi
+        
+        # Вставляем новую строку после секции [Service] или после последней строки внутри секции
         sed -i "/^\[Service\]/a ${key}=${value}" "$SERVICE_FILE"
         echo "   → Добавлено: ${key}=${value}"
     fi
