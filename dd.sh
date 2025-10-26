@@ -189,12 +189,19 @@ echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
 echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
 sysctl -p
 
+# ======================================================================================================== #
+#                            .ENV ДЛЯ MARZBAN                                                              #
+# ======================================================================================================== #
 
 echo 'SUB_PROFILE_TITLE = "BLACKTEMPLE VPN BR"' >> /opt/marzban/.env
 echo 'SUB_UPDATE_INTERVAL = "2"' >> /opt/marzban/.env
 echo "XRAY_SUBSCRIPTION_URL_PREFIX=\"https://$DASH_DOMAIN\"" >> /opt/marzban/.env
 echo "UVICORN_SSL_KEYFILE =\"$ACME_DM_KEY\"" >> /opt/marzban/.env
 echo "UVICORN_SSL_CERTFILE =\"$ACME_DM_FC\"" >> /opt/marzban/.env
+
+# ======================================================================================================== #
+#                            ACME ДОМЕНЫ В VOLUME                                                          #
+# ======================================================================================================== #
 
 ACME_DIR="/root/.acme.sh/${DASH_DOMAIN}_ecc"
 
@@ -215,6 +222,10 @@ if command -v yq &> /dev/null; then
 else
     sed -i "/volumes:/a \      - $ACME_DIR:$ACME_DIR" "$COMPOSE_FILE"
 fi
+
+# ======================================================================================================== #
+#                            РЕЗОЛВ НА 1.1.1.1                                                             #
+# ======================================================================================================== #
 
 CONF_FILE="/etc/systemd/resolved.conf"
 
@@ -246,5 +257,64 @@ systemctl status --no-pager systemd-resolved
 
 echo "Текущие DNS:"
 resolvectl dns
+
+# ========================================================================================================
+# CRONTAB ДЛЯ MARZBAN
+# ========================================================================================================
+
+set -eu
+
+
+NEW_CMD='sudo bash -c "$(curl -sL https://raw.githubusercontent.com/V2as/SauceScripts/main/sauceban.sh)" @ restart'
+CURRENT=$(crontab -l 2>/dev/null || true)
+PLAIN_LINES=$(printf '%s\n' "$CURRENT" | awk '!/^[[:space:]]*#/ && !/^[[:space:]]*$/ {print}')
+COUNT=$(printf '%s\n' "$PLAIN_LINES" | grep -c . || true)
+
+if [ "$COUNT" -gt 1 ]; then
+  echo "В crontab больше одной заполненной строки ($COUNT). Ничего не добавляю."
+  exit 0
+fi
+
+if [ "$COUNT" -eq 0 ]; then
+  echo "В crontab нет заполненных строк. Нечего дублировать."
+  exit 1
+fi
+
+FIRST_LINE=$(printf '%s\n' "$PLAIN_LINES" | sed -n '1p')
+
+case "$FIRST_LINE" in
+  [[:space:]]*@*)
+    SCHEDULE=$(printf '%s\n' "$FIRST_LINE" | awk '{print $1}')
+    ;;
+  *)
+    
+    SCHEDULE=$(printf '%s\n' "$FIRST_LINE" | awk '{printf "%s %s %s %s %s", $1,$2,$3,$4,$5}')
+    ;;
+esac
+
+
+NEW_LINE="$SCHEDULE $NEW_CMD"
+
+if printf '%s\n' "$CURRENT" | grep -F -x -q "$NEW_LINE"; then
+  echo "Такая строка уже присутствует в crontab. Ничего не делаю."
+  exit 0
+fi
+
+TMP=$(mktemp /tmp/cronXXXXXX) || exit 1
+printf '%s\n' "$CURRENT" > "$TMP"
+printf '\n' >> "$TMP"
+printf '%s\n' "$NEW_LINE" >> "$TMP"
+
+if crontab "$TMP"; then
+  echo "Добавлена новая задача:"
+  echo "$NEW_LINE"
+  rm -f "$TMP"
+  exit 0
+else
+  echo "Ошибка при установке crontab" >&2
+  rm -f "$TMP"
+  exit 2
+fi
+
 
 sudo bash -c "$(curl -sL https://raw.githubusercontent.com/V2as/SauceScripts/main/sauceban.sh)" @ restart
