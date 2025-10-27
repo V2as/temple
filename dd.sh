@@ -375,3 +375,4 @@ systemctl restart nginx
 echo "✅ Ура! Теперь можно проверить: systemctl cat nginx"
 
 sudo bash -c "$(curl -sL https://raw.githubusercontent.com/V2as/SauceScripts/main/sauceban.sh)" @ restart
+systemctl restart haproxy
