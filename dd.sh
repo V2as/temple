@@ -374,4 +374,5 @@ systemctl enable nginx
 systemctl restart nginx
 echo "✅ Ура! Теперь можно проверить: systemctl cat nginx"
 systemctl restart haproxy
+echo "UVICORN_PORT=10000" >> /opt/marzban/.env
 marzban restart -n
