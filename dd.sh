@@ -23,7 +23,7 @@ echo -e "Package: nginx*\nPin: origin nginx.org\nPin-Priority: 900" | sudo tee /
 
 sudo apt update
 
-sudo apt install nginx -y
+apt-get install -y -o Dpkg::Options::="--force-confold" nginx
 apt install -y haproxy
 
 cat << "EOF" > "$NGINX_CFG_PATH"
